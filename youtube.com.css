@@ -1,0 +1,13 @@
+.hide_cfghjnbvcxfgh
+{
+    display: none !important;
+}
+
+.rotate_cfghjnbvcxfgh
+{
+    transition: transform 100ms;
+}
+.rotateIgnoreTransition_cfghjnbvcxfgh
+{
+    transition: transform 0ms !important;
+}
