@@ -5,6 +5,7 @@ var videoSpeedController_speedIndicator_selector = "div.vsc-controller";
 var youtube_thinkToHide_selector = "#ytd-player > #container > .html5-video-player > :not(.html5-video-container)";
 var youtube_video_selector = "#ytd-player > #container > .html5-video-player > .html5-video-container > .video-stream";
 var youtube_videoArea_selector = "#ytd-player > #container > .html5-video-player";
+var youtube_likeButton_selector = "#segmented-like-button button";
 
 $(document).ready(()=>{
     // console.log("oi");
@@ -21,7 +22,7 @@ $(document).ready(()=>{
             if(e.target.type == "text") return;
         }
         
-        console.log("doc key", e.charCode, e);
+        // console.log("doc key", e.charCode, e);
 
 
         switch(e.charCode)
@@ -39,8 +40,11 @@ $(document).ready(()=>{
             turnLeft();
             break;
         case 112: // 'p' key
-            readVideoSizes();
+            pressLike();
             break;
+        // case 111: // 'o' key
+        //     // used to debug...
+        //     break;
         }
     });
 
@@ -50,9 +54,15 @@ $(document).ready(()=>{
 var isClearViewEnabled = false;
 function toggleClearView()
 {
-    console.log("toggle clear view")
+    // console.log("toggle clear view")
     isClearViewEnabled = !isClearViewEnabled;
+    saveConfigInLocalStorage();
 
+    updateClearView();
+}
+
+function updateClearView()
+{
     var toHide = $(youtube_thinkToHide_selector);
     var toHide2 = $(videoSpeedController_speedIndicator_selector);
 
@@ -77,21 +87,46 @@ var isTurned = false;
 var cssTag;
 function setupRotate()
 {
+    jsonConfig = window.localStorage.getItem("configs_cfghjnbvcxfgh");
+    if(jsonConfig == null) saveConfigInLocalStorage();
+    else
+    {
+        jsonConfig = JSON.parse(jsonConfig);
+        turnAngle = jsonConfig.turnAngle;
+        isTurned = jsonConfig.isTurned;
+        isClearViewEnabled = jsonConfig.isClearViewEnabled;
+    }
+
     cssTag = $(`<style></style>`);
     setTurnAngleInCss(turnAngle)
     $("body").append(cssTag);
+
     
     var timer = setInterval(()=>{
         var video = $(youtube_video_selector);
         if(video.length != 0)
         {
-            video.addClass("rotate_cfghjnbvcxfgh");
-            console.log("achou video:", video);
             clearInterval(timer);
+            // console.log("achou video:", video);
+
+
+            video.addClass("rotate_cfghjnbvcxfgh");
+            window.addEventListener("resize", turnUpdate);
+            setTimeout(()=>{
+                turnUpdate();
+            }, 0);
+            updateClearView();
+
         }
-        else console.log("n achou video...");
+        // else console.log("n achou video...");
     },200);
 
+}
+
+function saveConfigInLocalStorage()
+{
+    [rest, virtualZero] = getNormalizedAngles();
+    window.localStorage.setItem("configs_cfghjnbvcxfgh", JSON.stringify({turnAngle: rest, isTurned: isTurned, isClearViewEnabled: isClearViewEnabled}));
 }
 
 function cssTagString(angle, scale = 1)
@@ -102,13 +137,37 @@ function cssTagString(angle, scale = 1)
 function setTurnAngleInCss(angle)
 {
     var scale = scaleCompensationToFitInFrame(angle);
-    // var scale = 0.5;
+    
+    // if its upside down, add a fraction of a degre, to prevent it to bugging when in fullscreen
+    if((angle-180)%360 == 0) angle += 0.0000001;
+
     cssTag.html(cssTagString(angle, scale));
+}
+
+function getNormalizedAngles()
+{
+    var rest = turnAngle%360;
+    var virtualZero = turnAngle-rest;
+    
+    // console.log(`angle: ${turnAngle}`);
+    // console.log(`rest: ${rest}`);
+    var str = `virtual zero: ${virtualZero}`
+    if(Math.abs(rest) > 180)
+    {
+        var isNegative = (rest>0 ? 1 : -1);
+        virtualZero += isNegative * 360;
+        rest -= isNegative * 360;
+    }
+    // console.log(`${str} → ${virtualZero}`);
+
+    return [rest, virtualZero];
 }
 
 function turnToggle()
 {
     isTurned = !isTurned;
+
+    saveConfigInLocalStorage();
 
     
     if(isTurned)
@@ -117,8 +176,8 @@ function turnToggle()
     }
     else
     {
-        var rest = turnAngle%360;
-        var virtualZero = turnAngle-rest;
+        [rest, virtualZero] = getNormalizedAngles();
+
         setTurnAngleInCss(virtualZero);
         setTimeout(()=>{
             $(youtube_video_selector).addClass("rotateIgnoreTransition_cfghjnbvcxfgh");
@@ -127,7 +186,7 @@ function turnToggle()
                 $(youtube_video_selector).removeClass("rotateIgnoreTransition_cfghjnbvcxfgh");
             },0);
             turnAngle = rest;
-        },200);
+        },150);
     }
 }
 
@@ -140,7 +199,9 @@ function turn(deltaAngle)
     }
 
     turnAngle += deltaAngle;
-    setTurnAngleInCss(turnAngle);
+    
+    turnUpdate()
+    saveConfigInLocalStorage();
 }
 
 function turnRight()
@@ -151,6 +212,12 @@ function turnRight()
 function turnLeft()
 {   
     turn(15);
+}
+
+function turnUpdate()
+{
+    if(isTurned) setTurnAngleInCss(turnAngle);
+    else setTurnAngleInCss(0);
 }
 
 var videoX;
@@ -193,13 +260,13 @@ function scaleCompensationToFitInFrame(angle)
     var rotatedX2 = Math.abs(videoDiagonal*Math.cos(totalAngle));
     var rotatedY2 = Math.abs(videoDiagonal*Math.sin(totalAngle));
 
-    console.log(`rotatedX1:${rotatedX1}\nrotatedY1:${rotatedY1}`);
-    console.log(`rotatedX2:${rotatedX2}\nrotatedY2:${rotatedY2}`);
+    // console.log(`rotatedX1:${rotatedX1}\nrotatedY1:${rotatedY1}`);
+    // console.log(`rotatedX2:${rotatedX2}\nrotatedY2:${rotatedY2}`);
     
     var tiltedSizeX = rotatedX1 > rotatedX2 ? rotatedX1 : rotatedX2;
     var tiltedSizeY = rotatedY1 > rotatedY2 ? rotatedY1 : rotatedY2;
 
-    console.log(`externalSizeX:${tiltedSizeX}\nexternalSizeY:${tiltedSizeY}`);
+    // console.log(`externalSizeX:${tiltedSizeX}\nexternalSizeY:${tiltedSizeY}`);
 
 
 
@@ -209,4 +276,9 @@ function scaleCompensationToFitInFrame(angle)
     var scaleY = videoAreaY/tiltedSizeY;
 
     return scaleX < scaleY ? scaleX : scaleY;
+}
+
+function pressLike()
+{
+    $(youtube_likeButton_selector).click();
 }
