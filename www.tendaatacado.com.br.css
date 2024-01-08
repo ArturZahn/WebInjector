@@ -1,0 +1,86 @@
+#zmenucontainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 999999 !important;
+    color: #fff;
+}
+
+#zmenucheckbox {
+    display: none;
+}
+
+#zmenu {
+    display:flex;
+    background-color: #040430;
+    padding: 10px 10px;
+
+}
+
+#zmenu div {
+    margin: 0 10px;
+}
+
+input:not(:checked) + label + #zmenu {
+    display: none;
+}
+
+.zitemcontainer {
+    position: relative;
+}
+
+.zitemcontainer p:hover + .zitem,
+.zitemcontainer p:hover + p + .zitem {
+    display: block;
+}
+
+.zitem:hover {
+    display: block;
+}
+
+.zitem {
+    /*  */
+    position: absolute;
+    top: -10px;
+    left: -20px;
+    display: none;
+    z-index: 99999 !important;
+    /*  */
+
+    background-color: #040430;
+    padding: 15px 20px;
+}
+
+.zitem > div {
+    display: flex;
+    flex-direction: row;
+}
+
+.zitem .n {
+    width: 50px;
+}
+.zitem select {
+    width: 200px;
+}
+
+.zsomatotalcontainer {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 18px;
+    padding: 5px 10px;
+}
+
+.zsomatotalcontainer #zsomatotal {
+    margin-left: 10px;
+    padding: 5px 10px;
+}
+
+.zwrong {
+    background-color: #f00;
+    color: #fff;
+}
+
+.zqtdtotalitem {
+    text-align: center;
+}
