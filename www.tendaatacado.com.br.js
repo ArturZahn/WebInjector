@@ -163,6 +163,7 @@ function pessoasCasaChanged()
     text = $("#zpessoascasa").val()
     pessoasCasa = text.split("\n")
 
+    updatePessoasCombo();
     localStorage.setItem("etcxjrgn_pessoascasa", text)
 }
 
@@ -184,7 +185,8 @@ function updatePessoasCombo()
         txt = "<option>selecionar</option>"
 
         // txt = ""
-        pessoas.forEach(pessoa => {
+        pessoasJuntado = mergePessoas(pessoasCasa, pessoas);
+        pessoasJuntado.forEach(pessoa => {
             txt += `<option${p==pessoa?" selected":""}>${pessoa}</option>`
         });
 
@@ -277,6 +279,12 @@ function splitExpenses()
     postProcess();
 }
 
+function mergePessoas(vector1, vector2) {
+    const uniqueElementsFromVector2 = vector2.filter(element => !vector1.includes(element));
+    const resultVector = uniqueElementsFromVector2.concat(vector1);
+    return resultVector;
+}
+
 function getDate()
 {
     var today = new Date();
@@ -288,6 +296,7 @@ function getDate()
 
     return today;
 }
+
 finalData = []
 function postProcess()
 {
